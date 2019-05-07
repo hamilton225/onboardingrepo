@@ -13,25 +13,31 @@ resource "aws_vpc" "ob-vpc" {
   }
 }
 
-#public subnet
-resource "aws_subnet" "public-subnet" {
-  vpc_id            = "${aws_vpc.ob-vpc.id}"
-  cidr_block        = "${var.public_subnet_cidr}"
-  availability_zone = "eu-west-1a"
+#public subnets
+resource "aws_subnet" "pubsub" {
+  count = 2
+
+  vpc_id = "${aws_vpc.ob-vpc.id}"
+
+  cidr_block              = "${element(var.public_subnets_cidr,count.index)}"
+  map_public_ip_on_launch = true
 
   tags {
-    Name = "OB-VPC Public Subnet"
+    Name = "pubsubnet_${count.index}"
   }
 }
 
-#private subnet
-resource "aws_subnet" "private-subnet" {
-  vpc_id            = "${aws_vpc.ob-vpc.id}"
-  cidr_block        = "${var.private_subnet_cidr}"
-  availability_zone = "eu-west-1b"
+#private subnets
+resource "aws_subnet" "privsub" {
+  count = 2
+
+  vpc_id = "${aws_vpc.ob-vpc.id}"
+
+  cidr_block              = "${element(var.private_subnets_cidr,count.index)}"
+  map_public_ip_on_launch = true
 
   tags {
-    Name = "OB-VPC Private Subnet"
+    Name = "privsubnet_${count.index}"
   }
 }
 
@@ -53,12 +59,13 @@ resource "aws_route_table" "web-public-rt" {
   }
 
   tags {
-    Name = "Public Subnet RT"
+    Name = "Routes_Table"
   }
 }
 
 #assign route table to the public Subnet
-resource "aws_route_table_association" "ob-public-rt" {
-  subnet_id      = "${aws_subnet.public-subnet.id}"
+resource "aws_route_table_association" "associate_rt" {
+  count          = 2
+  subnet_id      = "${element(aws_subnet.pubsub.*.id, count.index)}"
   route_table_id = "${aws_route_table.web-public-rt.id}"
 }
