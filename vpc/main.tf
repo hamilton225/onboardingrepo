@@ -34,6 +34,13 @@ resource "aws_subnet" "private-subnet" {
     Name = "OB-VPC Private Subnet"
   }
 }
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.ob-vpc.id}"
+
+  tags {
+    Name = "VPC IGW"
+  }
+}
 
 # Define the route table
 resource "aws_route_table" "web-public-rt" {
